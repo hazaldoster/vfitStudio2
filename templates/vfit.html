@@ -1,0 +1,1167 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VFit Studio - Virtual Try-On</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/remixicon@3.5.0/fonts/remixicon.css" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Outfit', sans-serif;
+            background: #0a0a0a;
+            min-height: 100vh;
+            color: #fff;
+            padding-top: 60px;
+            padding-bottom: 100px;
+        }
+        .gradient-text {
+            background: linear-gradient(135deg, #ffffff, #a0a0a0);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+        }
+        .card {
+            background: #141414;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+        }
+        .card:hover {
+            border-color: rgba(255, 255, 255, 0.15);
+        }
+        .btn-gradient {
+            background: #fff;
+            color: #0a0a0a;
+            transition: all 0.3s ease;
+        }
+        .btn-gradient:hover {
+            background: rgba(255, 255, 255, 0.9);
+            transform: translateY(-2px);
+            box-shadow: 0 10px 30px rgba(255, 255, 255, 0.15);
+        }
+        .btn-gradient:disabled {
+            opacity: 0.3;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+        .feature-icon {
+            height: 50px;
+            width: 50px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: #fff;
+        }
+        .feature-icon i {
+            color: #0a0a0a !important;
+        }
+        
+        /* Upload Area Styles */
+        .upload-area {
+            border: 2px dashed rgba(255, 255, 255, 0.15);
+            border-radius: 12px;
+            padding: 2rem;
+            text-align: center;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            min-height: 280px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            background: rgba(255, 255, 255, 0.02);
+        }
+        .upload-area:hover {
+            border-color: rgba(255, 255, 255, 0.3);
+            background: rgba(255, 255, 255, 0.04);
+        }
+        .upload-area.dragover {
+            border-color: #B794F6;
+            background: rgba(183, 148, 246, 0.1);
+            transform: scale(1.02);
+        }
+        .upload-area.has-image {
+            padding: 0.5rem;
+            border-style: solid;
+            border-color: rgba(255, 255, 255, 0.2);
+        }
+        .upload-area img {
+            max-width: 100%;
+            max-height: 250px;
+            object-fit: contain;
+            border-radius: 8px;
+        }
+        
+        /* Tab Bar */
+        .tab-bar {
+            background: #0a0a0a;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+        }
+        .tab-button {
+            transition: all 0.3s ease;
+        }
+        .tab-button:hover {
+            background: #1a1a1a !important;
+            border-color: rgba(255, 255, 255, 0.15) !important;
+        }
+        
+        /* Result Card */
+        .result-card {
+            background: #141414;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 12px;
+            overflow: hidden;
+        }
+        .result-card img {
+            width: 100%;
+            max-height: 500px;
+            object-fit: contain;
+        }
+        
+        /* Loading Animation */
+        .loader {
+            width: 60px;
+            height: 60px;
+            border: 4px solid rgba(255, 255, 255, 0.1);
+            border-top-color: #fff;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        
+        /* Progress Bar */
+        .progress-container {
+            width: 100%;
+            max-width: 400px;
+            margin: 1rem auto;
+        }
+        .progress-bar-bg {
+            width: 100%;
+            height: 4px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 2px;
+            overflow: hidden;
+        }
+        .progress-bar-fill {
+            height: 100%;
+            background: #fff;
+            border-radius: 2px;
+            width: 0%;
+            transition: width 0.3s ease;
+        }
+        
+        /* Option Pills */
+        .option-pill {
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            background: transparent;
+            color: rgba(255, 255, 255, 0.7);
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 0.875rem;
+        }
+        .option-pill:hover {
+            border-color: rgba(255, 255, 255, 0.25);
+            background: rgba(255, 255, 255, 0.05);
+            color: #fff;
+        }
+        .option-pill.selected {
+            background: #fff;
+            border-color: #fff;
+            color: #0a0a0a;
+            font-weight: 500;
+        }
+        
+        /* Custom scrollbar */
+        ::-webkit-scrollbar {
+            width: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.02);
+        }
+        ::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.15);
+            border-radius: 3px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: rgba(255, 255, 255, 0.25);
+        }
+        
+        /* Textarea styling */
+        textarea {
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: #fff;
+            resize: none;
+        }
+        textarea:focus {
+            outline: none;
+            border-color: rgba(255, 255, 255, 0.25);
+            box-shadow: none;
+        }
+        textarea::placeholder {
+            color: rgba(255, 255, 255, 0.35);
+        }
+        
+        /* Remove button */
+        .remove-btn {
+            position: absolute;
+            top: 8px;
+            right: 8px;
+            background: rgba(239, 68, 68, 0.9);
+            border: none;
+            border-radius: 50%;
+            width: 28px;
+            height: 28px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            z-index: 10;
+        }
+        .remove-btn:hover {
+            background: #ef4444;
+            transform: scale(1.1);
+        }
+        
+        /* Result gallery */
+        .result-gallery {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 1rem;
+        }
+        
+        /* Edit Modal Styles */
+        .edit-modal {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.9);
+            backdrop-filter: blur(8px);
+            z-index: 100;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 1rem;
+        }
+        .edit-modal-content {
+            background: #141414;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 16px;
+            max-width: 900px;
+            width: 100%;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+        .edit-modal-header {
+            padding: 1rem 1.25rem;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 0.5rem;
+        }
+        .edit-modal-body {
+            padding: 1.5rem;
+        }
+        .edit-preview-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+        .edit-preview-box {
+            background: rgba(255, 255, 255, 0.03);
+            border-radius: 12px;
+            padding: 0.5rem;
+            text-align: center;
+            border: 1px solid rgba(255, 255, 255, 0.06);
+        }
+        .edit-preview-box img {
+            max-width: 100%;
+            max-height: 300px;
+            object-fit: contain;
+            border-radius: 8px;
+        }
+        .edit-preview-label {
+            font-size: 0.75rem;
+            color: #9ca3af;
+            margin-top: 0.5rem;
+        }
+        .edit-input-container {
+            display: flex;
+            gap: 0.75rem;
+            align-items: flex-end;
+        }
+        .edit-input-container textarea {
+            flex: 1 1 auto;
+            min-height: 80px;
+            font-size: 0.95rem;
+            min-width: 0;
+            width: 100%;
+        }
+        .edit-send-btn {
+            background: #fff;
+            border: none;
+            border-radius: 10px;
+            padding: 0.75rem;
+            color: #0a0a0a;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.1rem;
+            flex-shrink: 0;
+            width: 44px;
+            height: 44px;
+            align-self: flex-end;
+        }
+        .edit-send-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(255, 255, 255, 0.15);
+        }
+        .edit-send-btn:disabled {
+            opacity: 0.3;
+            cursor: not-allowed;
+            transform: none;
+        }
+        .edit-history {
+            max-height: 200px;
+            overflow-y: auto;
+            margin-bottom: 1rem;
+            padding: 0.5rem;
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 8px;
+        }
+        .edit-history-item {
+            padding: 0.75rem;
+            border-radius: 8px;
+            margin-bottom: 0.5rem;
+            font-size: 0.875rem;
+        }
+        .edit-history-item.user {
+            background: rgba(255, 255, 255, 0.1);
+            margin-left: 2rem;
+        }
+        .edit-history-item.ai {
+            background: rgba(255, 255, 255, 0.03);
+            margin-right: 2rem;
+        }
+        .edit-loading {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 2rem;
+        }
+        .edit-loading .loader {
+            width: 40px;
+            height: 40px;
+        }
+        .quick-edit-btn {
+            transition: all 0.2s ease;
+        }
+        .quick-edit-btn:hover {
+            transform: translateY(-1px);
+        }
+    </style>
+</head>
+<body class="overflow-x-hidden">
+    <!-- Tab Bar -->
+    <div class="tab-bar fixed top-0 left-0 w-full z-50 px-4 py-0">
+        <div class="container mx-auto flex justify-between items-center h-[60px]">
+            <div class="flex items-center">
+            </div>
+            <div class="flex items-center space-x-3">
+                <a href="/library" class="tab-button flex items-center gap-2 px-3 py-1.5 rounded-lg bg-[#141414] text-white/70 border border-white/10">
+                    <i class="ri-gallery-line text-lg"></i>
+                    <span>Library</span>
+                </a>
+                <a href="/directory" class="tab-button flex items-center gap-2 px-3 py-1.5 rounded-lg bg-[#141414] text-white/70 border border-white/10">
+                    <i class="ri-folder-line text-lg"></i>
+                    <span>Directory</span>
+                </a>
+                <a href="/home" class="tab-button flex items-center gap-2 px-3 py-1.5 rounded-lg bg-[#141414] text-white/70 border border-white/10">
+                    <i class="ri-home-line text-lg"></i>
+                    <span>Home</span>
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <div class="container max-w-7xl mx-auto px-4 py-6">
+        <!-- Header -->
+        <header class="text-center mb-8">
+            <div class="flex items-center justify-center mb-4">
+                <div class="feature-icon">
+                    <i class="ri-t-shirt-2-line text-2xl text-white"></i>
+                </div>
+            </div>
+            <h1 class="gradient-text text-4xl sm:text-5xl font-bold mb-3">
+                VFit Studio
+            </h1>
+            <p class="text-gray-400 text-lg">
+                AI Destekli Sanal Kıyafet Deneme Teknolojisi
+            </p>
+        </header>
+
+        <!-- Main Content -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+            <!-- Model Upload -->
+            <div class="card rounded-xl p-6">
+                <div class="flex items-center mb-4">
+                    <div class="w-10 h-10 rounded-full bg-white flex items-center justify-center mr-3">
+                        <i class="ri-user-line text-black text-lg"></i>
+                    </div>
+                    <div>
+                        <h3 class="text-lg font-semibold text-white">Model Görseli</h3>
+                        <p class="text-gray-400 text-sm">Kıyafetin üzerinde deneneceği model</p>
+                    </div>
+                </div>
+                <div id="modelUploadArea" class="upload-area relative">
+                    <input type="file" id="modelInput" accept="image/*" class="hidden">
+                    <div id="modelPlaceholder" class="flex flex-col items-center">
+                        <div class="w-16 h-16 rounded-full bg-white/10 flex items-center justify-center mb-4">
+                            <i class="ri-user-add-line text-3xl text-white/60"></i>
+                        </div>
+                        <p class="text-gray-300 font-medium mb-2">Model fotoğrafı yükleyin</p>
+                        <p class="text-gray-500 text-sm">Tam boy veya yarım boy model fotoğrafı</p>
+                        <p class="text-gray-600 text-xs mt-2">PNG, JPG (max 10MB)</p>
+                    </div>
+                    <img id="modelPreview" class="hidden" alt="Model Preview">
+                    <button id="modelRemoveBtn" class="remove-btn hidden">
+                        <i class="ri-close-line text-white"></i>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Product Upload -->
+            <div class="card rounded-xl p-6">
+                <div class="flex items-center mb-4">
+                    <div class="w-10 h-10 rounded-full bg-white flex items-center justify-center mr-3">
+                        <i class="ri-t-shirt-line text-black text-lg"></i>
+                    </div>
+                    <div>
+                        <h3 class="text-lg font-semibold text-white">Ürün Görseli <span class="text-gray-500 text-sm font-normal">(Opsiyonel)</span></h3>
+                        <p class="text-gray-400 text-sm">Giydirmek istediğiniz kıyafet veya talimat yazın</p>
+                    </div>
+                </div>
+                <div id="productUploadArea" class="upload-area relative">
+                    <input type="file" id="productInput" accept="image/*" class="hidden">
+                    <div id="productPlaceholder" class="flex flex-col items-center">
+                        <div class="w-16 h-16 rounded-full bg-white/10 flex items-center justify-center mb-4">
+                            <i class="ri-t-shirt-2-line text-3xl text-white/60"></i>
+                        </div>
+                        <p class="text-gray-300 font-medium mb-2">Ürün fotoğrafı yükleyin</p>
+                        <p class="text-gray-500 text-sm">Veya aşağıda ek talimat yazarak kıyafet tanımlayın</p>
+                        <p class="text-gray-600 text-xs mt-2">PNG, JPG (max 10MB)</p>
+                    </div>
+                    <img id="productPreview" class="hidden" alt="Product Preview">
+                    <button id="productRemoveBtn" class="remove-btn hidden">
+                        <i class="ri-close-line text-white"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Options Section -->
+        <div class="card rounded-xl p-6 mb-8">
+            <h3 class="text-lg font-semibold text-white mb-4 flex items-center">
+                <i class="ri-settings-3-line mr-2 text-white/60"></i>
+                Deneme Seçenekleri
+            </h3>
+            
+            <!-- Garment Type -->
+            <div class="mb-6">
+                <label class="text-gray-300 text-sm font-medium mb-3 block">Kıyafet Türü</label>
+                <div class="flex flex-wrap gap-2">
+                    <button class="option-pill selected" data-type="upper">Üst Giyim</button>
+                    <button class="option-pill" data-type="lower">Alt Giyim</button>
+                    <button class="option-pill" data-type="dress">Elbise</button>
+                    <button class="option-pill" data-type="outerwear">Dış Giyim</button>
+                    <button class="option-pill" data-type="accessories">Aksesuar</button>
+                </div>
+            </div>
+            
+            <!-- Fit Style -->
+            <div id="fitStyleSection" class="mb-6 transition-all duration-300">
+                <label class="text-gray-300 text-sm font-medium mb-3 block">Oturma Stili</label>
+                <div id="fitStyleOptions" class="flex flex-wrap gap-2">
+                    <button class="option-pill fit-pill selected" data-fit="natural">Doğal Fit</button>
+                    <button class="option-pill fit-pill" data-fit="slim">Slim Fit</button>
+                    <button class="option-pill fit-pill" data-fit="loose">Loose Fit</button>
+                    <button class="option-pill fit-pill" data-fit="oversized">Oversize</button>
+                </div>
+            </div>
+            
+            <!-- Additional Instructions -->
+            <div>
+                <label id="instructionsLabel" class="text-gray-300 text-sm font-medium mb-3 block">
+                    Ek Talimatlar <span id="instructionsOptional" class="text-gray-500">(Opsiyonel)</span>
+                    <span id="instructionsRequired" class="text-amber-400 hidden">(Ürün görseli yoksa zorunlu)</span>
+                </label>
+                <textarea 
+                    id="additionalInstructions" 
+                    rows="3" 
+                    class="w-full rounded-lg px-4 py-3"
+                    placeholder="Örn: Modele kırmızı bir elbise giydir, üzerine siyah ceket ekle, beyaz spor ayakkabı koy..."
+                ></textarea>
+                <p id="instructionsHint" class="text-gray-500 text-xs mt-2 hidden">
+                    <i class="ri-information-line mr-1"></i>
+                    Ürün görseli yüklemediğinizde, hangi kıyafeti istediğinizi burada açıklayın
+                </p>
+            </div>
+        </div>
+
+        <!-- Generate Button -->
+        <div class="text-center mb-8">
+            <button id="generateBtn" class="btn-gradient text-white px-10 py-4 rounded-xl font-semibold text-lg disabled:opacity-50" disabled>
+                <i class="ri-magic-line mr-2"></i>
+                Virtual Try-On Oluştur
+            </button>
+            <p id="generateHint" class="text-gray-500 text-sm mt-3">
+                Başlamak için model ve ürün görsellerini yükleyin
+            </p>
+        </div>
+
+        <!-- Loading State -->
+        <div id="loadingState" class="hidden text-center py-12">
+            <div class="flex flex-col items-center">
+                <div class="loader mb-6"></div>
+                <p class="text-white/80 font-medium text-lg mb-2">AI modelinizi hazırlıyor...</p>
+                <p id="loadingStatus" class="text-gray-400 text-sm">Görseller işleniyor</p>
+                <div class="progress-container mt-4">
+                    <div class="progress-bar-bg">
+                        <div id="progressBar" class="progress-bar-fill"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Results Section -->
+        <div id="resultsSection" class="hidden">
+            <div class="flex items-center justify-between mb-6">
+                <h3 class="text-xl font-semibold text-white flex items-center">
+                    <i class="ri-gallery-line mr-2 text-white/60"></i>
+                    Sonuçlar
+                </h3>
+                <button id="downloadAllBtn" class="flex items-center gap-2 px-4 py-2 rounded-lg bg-white/10 text-white/80 hover:bg-white/15 transition-all">
+                    <i class="ri-download-line"></i>
+                    Tümünü İndir
+                </button>
+            </div>
+            <div id="resultsGallery" class="result-gallery">
+                <!-- Results will be inserted here -->
+            </div>
+        </div>
+
+        <!-- Error State -->
+        <div id="errorState" class="hidden">
+            <div class="card rounded-xl p-8 text-center">
+                <div class="w-16 h-16 rounded-full bg-red-500/20 flex items-center justify-center mx-auto mb-4">
+                    <i class="ri-error-warning-line text-3xl text-red-400"></i>
+                </div>
+                <h3 class="text-xl font-semibold text-white mb-2">Bir Hata Oluştu</h3>
+                <p id="errorMessage" class="text-gray-400 mb-4">Lütfen tekrar deneyin.</p>
+                <button id="retryBtn" class="btn-gradient text-white px-6 py-2 rounded-lg font-medium">
+                    <i class="ri-refresh-line mr-2"></i>
+                    Tekrar Dene
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Edit Modal -->
+    <div id="editModal" class="edit-modal hidden">
+        <div class="edit-modal-content">
+            <div class="edit-modal-header">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 rounded-full bg-white flex items-center justify-center">
+                        <i class="ri-edit-2-line text-black text-lg"></i>
+                    </div>
+                    <div>
+                        <h3 class="text-lg font-semibold text-white">Görseli Düzenle</h3>
+                    </div>
+                </div>
+                <button id="closeEditModal" class="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-white/10 transition-all flex-shrink-0" title="Kapat">
+                    <i class="ri-close-line text-gray-400 text-lg"></i>
+                </button>
+            </div>
+            <div class="edit-modal-body">
+                <!-- Preview Images -->
+                <div class="edit-preview-container">
+                    <div class="edit-preview-box">
+                        <img id="editOriginalImage" src="" alt="Orijinal">
+                        <p class="edit-preview-label">Orijinal Görsel</p>
+                    </div>
+                    <div class="edit-preview-box">
+                        <div id="editCurrentPlaceholder" class="flex flex-col items-center justify-center h-[200px] text-gray-500">
+                            <i class="ri-image-add-line text-4xl mb-2 text-white/30"></i>
+                            <p class="text-sm">Düzenleme sonucu burada görünecek</p>
+                        </div>
+                        <img id="editCurrentImage" src="" alt="Güncel" class="hidden">
+                        <p class="edit-preview-label">Güncel Görsel</p>
+                    </div>
+                </div>
+                
+                <!-- Edit History -->
+                <div id="editHistory" class="edit-history hidden">
+                    <!-- History items will be added here -->
+                </div>
+                
+                <!-- Edit Loading -->
+                <div id="editLoading" class="edit-loading hidden">
+                    <div class="loader"></div>
+                    <span class="text-white/70 ml-3">Düzenleniyor...</span>
+                </div>
+                
+                <!-- Edit Input -->
+                <div class="edit-input-container">
+                    <textarea 
+                        id="editPromptInput" 
+                        class="w-full rounded-lg px-4 py-3"
+                        placeholder="Ne değişiklik yapmak istiyorsunuz? Örn: Arka planı beyaz yap, kıyafetin rengini mavi yap..."
+                        rows="2"
+                    ></textarea>
+                    <button id="editSendBtn" class="edit-send-btn" title="Gönder">
+                        <i class="ri-send-plane-fill"></i>
+                    </button>
+                </div>
+                
+                <!-- Quick Edit Suggestions -->
+                <div class="mt-4">
+                    <p class="text-gray-500 text-xs mb-2">Hızlı düzenleme önerileri:</p>
+                    <div class="flex flex-wrap gap-2">
+                        <button class="quick-edit-btn text-xs px-3 py-1.5 rounded-full border border-white/15 text-white/60 hover:bg-white/5 hover:text-white/80">Arka planı beyaz yap</button>
+                        <button class="quick-edit-btn text-xs px-3 py-1.5 rounded-full border border-white/15 text-white/60 hover:bg-white/5 hover:text-white/80">Işıklandırmayı artır</button>
+                        <button class="quick-edit-btn text-xs px-3 py-1.5 rounded-full border border-white/15 text-white/60 hover:bg-white/5 hover:text-white/80">Daha profesyonel görünüm</button>
+                        <button class="quick-edit-btn text-xs px-3 py-1.5 rounded-full border border-white/15 text-white/60 hover:bg-white/5 hover:text-white/80">Gölgeleri yumuşat</button>
+                        <button class="quick-edit-btn text-xs px-3 py-1.5 rounded-full border border-white/15 text-white/60 hover:bg-white/5 hover:text-white/80">Kıyafet kırışıklarını düzelt</button>
+                    </div>
+                </div>
+                
+                <!-- Action Buttons -->
+                <div class="flex justify-end gap-3 mt-6 pt-4 border-t border-white/10">
+                    <button id="editResetBtn" class="px-4 py-2 rounded-lg border border-white/15 text-white/60 hover:bg-white/5 hover:text-white/80 transition-all">
+                        <i class="ri-restart-line mr-1"></i>
+                        Sıfırla
+                    </button>
+                    <button id="editSaveBtn" class="px-4 py-2 rounded-lg bg-white text-black hover:bg-white/90 transition-all font-medium">
+                        <i class="ri-check-line mr-1"></i>
+                        Kaydet ve Kapat
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // State
+            let modelImage = null;
+            let productImage = null;
+            let selectedType = 'upper';
+            let selectedFit = 'natural';
+            
+            // Elements
+            const modelUploadArea = document.getElementById('modelUploadArea');
+            const productUploadArea = document.getElementById('productUploadArea');
+            const modelInput = document.getElementById('modelInput');
+            const productInput = document.getElementById('productInput');
+            const modelPreview = document.getElementById('modelPreview');
+            const productPreview = document.getElementById('productPreview');
+            const modelPlaceholder = document.getElementById('modelPlaceholder');
+            const productPlaceholder = document.getElementById('productPlaceholder');
+            const modelRemoveBtn = document.getElementById('modelRemoveBtn');
+            const productRemoveBtn = document.getElementById('productRemoveBtn');
+            const generateBtn = document.getElementById('generateBtn');
+            const generateHint = document.getElementById('generateHint');
+            const loadingState = document.getElementById('loadingState');
+            const resultsSection = document.getElementById('resultsSection');
+            const resultsGallery = document.getElementById('resultsGallery');
+            const errorState = document.getElementById('errorState');
+            const errorMessage = document.getElementById('errorMessage');
+            const progressBar = document.getElementById('progressBar');
+            const loadingStatus = document.getElementById('loadingStatus');
+            
+            // Fit style section elements
+            const fitStyleSection = document.getElementById('fitStyleSection');
+            const fitStyleOptions = document.getElementById('fitStyleOptions');
+            
+            // Function to toggle fit style section
+            function updateFitStyleVisibility(type) {
+                if (type === 'accessories') {
+                    fitStyleSection.style.opacity = '0.4';
+                    fitStyleSection.style.pointerEvents = 'none';
+                    fitStyleOptions.querySelectorAll('.fit-pill').forEach(p => {
+                        p.disabled = true;
+                    });
+                } else {
+                    fitStyleSection.style.opacity = '1';
+                    fitStyleSection.style.pointerEvents = 'auto';
+                    fitStyleOptions.querySelectorAll('.fit-pill').forEach(p => {
+                        p.disabled = false;
+                    });
+                }
+            }
+            
+            // Type selection
+            document.querySelectorAll('.option-pill[data-type]').forEach(pill => {
+                pill.addEventListener('click', function() {
+                    document.querySelectorAll('.option-pill[data-type]').forEach(p => p.classList.remove('selected'));
+                    this.classList.add('selected');
+                    selectedType = this.dataset.type;
+                    updateFitStyleVisibility(selectedType);
+                });
+            });
+            
+            // Fit selection
+            document.querySelectorAll('.fit-pill').forEach(pill => {
+                pill.addEventListener('click', function() {
+                    if (this.disabled) return;
+                    document.querySelectorAll('.fit-pill').forEach(p => p.classList.remove('selected'));
+                    this.classList.add('selected');
+                    selectedFit = this.dataset.fit;
+                });
+            });
+            
+            // Initial state
+            updateFitStyleVisibility(selectedType);
+            
+            // Upload area click handlers
+            modelUploadArea.addEventListener('click', () => modelInput.click());
+            productUploadArea.addEventListener('click', () => productInput.click());
+            
+            // Drag and drop
+            [modelUploadArea, productUploadArea].forEach(area => {
+                area.addEventListener('dragover', (e) => {
+                    e.preventDefault();
+                    area.classList.add('dragover');
+                });
+                area.addEventListener('dragleave', () => {
+                    area.classList.remove('dragover');
+                });
+                area.addEventListener('drop', (e) => {
+                    e.preventDefault();
+                    area.classList.remove('dragover');
+                    const file = e.dataTransfer.files[0];
+                    if (file && file.type.startsWith('image/')) {
+                        if (area === modelUploadArea) {
+                            handleModelUpload(file);
+                        } else {
+                            handleProductUpload(file);
+                        }
+                    }
+                });
+            });
+            
+            // File input handlers
+            modelInput.addEventListener('change', (e) => {
+                if (e.target.files[0]) handleModelUpload(e.target.files[0]);
+            });
+            productInput.addEventListener('change', (e) => {
+                if (e.target.files[0]) handleProductUpload(e.target.files[0]);
+            });
+            
+            // Remove buttons
+            modelRemoveBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                clearModelImage();
+            });
+            productRemoveBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                clearProductImage();
+            });
+            
+            function handleModelUpload(file) {
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    modelImage = e.target.result;
+                    modelPreview.src = modelImage;
+                    modelPreview.classList.remove('hidden');
+                    modelPlaceholder.classList.add('hidden');
+                    modelRemoveBtn.classList.remove('hidden');
+                    modelUploadArea.classList.add('has-image');
+                    updateGenerateButton();
+                };
+                reader.readAsDataURL(file);
+            }
+            
+            function handleProductUpload(file) {
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    productImage = e.target.result;
+                    productPreview.src = productImage;
+                    productPreview.classList.remove('hidden');
+                    productPlaceholder.classList.add('hidden');
+                    productRemoveBtn.classList.remove('hidden');
+                    productUploadArea.classList.add('has-image');
+                    updateGenerateButton();
+                };
+                reader.readAsDataURL(file);
+            }
+            
+            function clearModelImage() {
+                modelImage = null;
+                modelPreview.src = '';
+                modelPreview.classList.add('hidden');
+                modelPlaceholder.classList.remove('hidden');
+                modelRemoveBtn.classList.add('hidden');
+                modelUploadArea.classList.remove('has-image');
+                modelInput.value = '';
+                updateGenerateButton();
+            }
+            
+            function clearProductImage() {
+                productImage = null;
+                productPreview.src = '';
+                productPreview.classList.add('hidden');
+                productPlaceholder.classList.remove('hidden');
+                productRemoveBtn.classList.add('hidden');
+                productUploadArea.classList.remove('has-image');
+                productInput.value = '';
+                updateGenerateButton();
+            }
+            
+            // Ek talimatlar için elementler
+            const additionalInstructionsInput = document.getElementById('additionalInstructions');
+            const instructionsOptional = document.getElementById('instructionsOptional');
+            const instructionsRequired = document.getElementById('instructionsRequired');
+            const instructionsHint = document.getElementById('instructionsHint');
+            
+            function updateGenerateButton() {
+                const additionalInstructions = additionalInstructionsInput.value.trim();
+                
+                // Model görseli zorunlu, ürün görseli opsiyonel
+                // Ürün görseli yoksa ek talimat zorunlu
+                const canGenerate = modelImage && (productImage || additionalInstructions);
+                generateBtn.disabled = !canGenerate;
+                
+                // Ek talimatlar label'ını güncelle
+                if (productImage) {
+                    // Ürün görseli varsa talimat opsiyonel
+                    instructionsOptional.classList.remove('hidden');
+                    instructionsRequired.classList.add('hidden');
+                    instructionsHint.classList.add('hidden');
+                    additionalInstructionsInput.placeholder = 'Örn: Kıyafetin kollarını kıvırılmış göster, arka plan olarak stüdyo ortamı kullan...';
+                } else {
+                    // Ürün görseli yoksa talimat zorunlu
+                    instructionsOptional.classList.add('hidden');
+                    instructionsRequired.classList.remove('hidden');
+                    instructionsHint.classList.remove('hidden');
+                    additionalInstructionsInput.placeholder = 'Örn: Modele kırmızı bir elbise giydir, üzerine siyah ceket ekle...';
+                }
+                
+                if (!modelImage) {
+                    generateHint.textContent = 'Başlamak için model görseli yükleyin';
+                    generateHint.classList.remove('text-white/70');
+                    generateHint.classList.add('text-gray-500');
+                } else if (!productImage && !additionalInstructions) {
+                    generateHint.textContent = 'Ürün görseli yükleyin veya ek talimat yazın';
+                    generateHint.classList.remove('text-white/70');
+                    generateHint.classList.add('text-amber-400');
+                } else if (canGenerate) {
+                    generateHint.textContent = 'Hazır! Virtual try-on oluşturmak için butona tıklayın';
+                    generateHint.classList.add('text-white/70');
+                    generateHint.classList.remove('text-gray-500', 'text-amber-400');
+                }
+            }
+            
+            // Ek talimatlar input'u değişince buton durumunu güncelle
+            additionalInstructionsInput.addEventListener('input', updateGenerateButton);
+            
+            // Generate button click
+            generateBtn.addEventListener('click', async () => {
+                const additionalInstructions = additionalInstructionsInput.value.trim();
+                if (!modelImage || (!productImage && !additionalInstructions)) return;
+                
+                // Hide previous states
+                resultsSection.classList.add('hidden');
+                errorState.classList.add('hidden');
+                
+                // Show loading
+                loadingState.classList.remove('hidden');
+                generateBtn.disabled = true;
+                
+                // Simulate progress
+                let progress = 0;
+                const progressInterval = setInterval(() => {
+                    progress += Math.random() * 15;
+                    if (progress > 90) progress = 90;
+                    progressBar.style.width = progress + '%';
+                    
+                    if (progress < 30) {
+                        loadingStatus.textContent = 'Görseller analiz ediliyor...';
+                    } else if (progress < 60) {
+                        loadingStatus.textContent = 'AI modeli çalışıyor...';
+                    } else {
+                        loadingStatus.textContent = 'Sonuç oluşturuluyor...';
+                    }
+                }, 500);
+                
+                try {
+                    
+                    const response = await fetch('/api/vfit-tryon', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({
+                            model_image: modelImage,
+                            product_image: productImage,
+                            garment_type: selectedType,
+                            fit_style: selectedFit,
+                            additional_instructions: additionalInstructions
+                        })
+                    });
+                    
+                    clearInterval(progressInterval);
+                    progressBar.style.width = '100%';
+                    
+                    const data = await response.json();
+                    
+                    if (data.success) {
+                        // Show results
+                        loadingState.classList.add('hidden');
+                        resultsSection.classList.remove('hidden');
+                        
+                        // Clear previous results
+                        resultsGallery.innerHTML = '';
+                        
+                        // Add new result
+                        const resultCard = document.createElement('div');
+                        resultCard.className = 'result-card';
+                        resultCard.innerHTML = `
+                            <img src="${data.result_image}" alt="Virtual Try-On Result" class="result-image">
+                            <div class="p-4">
+                                <div class="flex items-center justify-between">
+                                    <span class="text-gray-400 text-sm">Virtual Try-On Sonucu</span>
+                                    <div class="flex gap-2">
+                                        <button class="edit-btn p-2 rounded-lg bg-white/10 text-white/70 hover:bg-white/15 hover:text-white transition-all" data-image="${data.result_image}" title="Düzenle">
+                                            <i class="ri-edit-2-line"></i>
+                                        </button>
+                                        <button class="download-btn p-2 rounded-lg bg-white/10 text-white/70 hover:bg-white/15 hover:text-white transition-all" data-image="${data.result_image}" title="İndir">
+                                            <i class="ri-download-line"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        `;
+                        resultsGallery.appendChild(resultCard);
+                        
+                        // Add download handler
+                        resultCard.querySelector('.download-btn').addEventListener('click', function() {
+                            const link = document.createElement('a');
+                            link.href = this.dataset.image;
+                            link.download = 'vfit-tryon-result.png';
+                            link.click();
+                        });
+                        
+                        // Add edit handler
+                        resultCard.querySelector('.edit-btn').addEventListener('click', function() {
+                            openEditModal(this.dataset.image, resultCard);
+                        });
+                    } else {
+                        throw new Error(data.error || 'Bir hata oluştu');
+                    }
+                } catch (error) {
+                    clearInterval(progressInterval);
+                    loadingState.classList.add('hidden');
+                    errorState.classList.remove('hidden');
+                    errorMessage.textContent = error.message;
+                } finally {
+                    generateBtn.disabled = false;
+                    progressBar.style.width = '0%';
+                }
+            });
+            
+            // Retry button
+            document.getElementById('retryBtn').addEventListener('click', () => {
+                errorState.classList.add('hidden');
+            });
+            
+            // Download all
+            document.getElementById('downloadAllBtn').addEventListener('click', () => {
+                document.querySelectorAll('.download-btn').forEach(btn => btn.click());
+            });
+            
+            // ========== EDIT MODAL FUNCTIONALITY ==========
+            const editModal = document.getElementById('editModal');
+            const closeEditModalBtn = document.getElementById('closeEditModal');
+            const editOriginalImage = document.getElementById('editOriginalImage');
+            const editCurrentImage = document.getElementById('editCurrentImage');
+            const editPromptInput = document.getElementById('editPromptInput');
+            const editSendBtn = document.getElementById('editSendBtn');
+            const editHistory = document.getElementById('editHistory');
+            const editLoading = document.getElementById('editLoading');
+            const editResetBtn = document.getElementById('editResetBtn');
+            const editSaveBtn = document.getElementById('editSaveBtn');
+            
+            let currentEditSessionId = null;
+            let originalImageForEdit = null;
+            let currentImageForEdit = null;
+            let currentResultCard = null;
+            
+            const editCurrentPlaceholder = document.getElementById('editCurrentPlaceholder');
+            
+            function openEditModal(imageSrc, resultCard) {
+                originalImageForEdit = imageSrc;
+                currentImageForEdit = imageSrc;
+                currentResultCard = resultCard;
+                currentEditSessionId = 'vfit_' + Date.now();
+                
+                editOriginalImage.src = imageSrc;
+                // Güncel görsel başlangıçta boş - placeholder göster
+                editCurrentImage.src = '';
+                editCurrentImage.classList.add('hidden');
+                editCurrentPlaceholder.classList.remove('hidden');
+                editHistory.innerHTML = '';
+                editHistory.classList.add('hidden');
+                editPromptInput.value = '';
+                
+                editModal.classList.remove('hidden');
+                document.body.style.overflow = 'hidden';
+            }
+            
+            function closeEditModal() {
+                editModal.classList.add('hidden');
+                document.body.style.overflow = '';
+            }
+            
+            closeEditModalBtn.addEventListener('click', closeEditModal);
+            
+            // Close on backdrop click
+            editModal.addEventListener('click', (e) => {
+                if (e.target === editModal) {
+                    closeEditModal();
+                }
+            });
+            
+            // Close on Escape key
+            document.addEventListener('keydown', (e) => {
+                if (e.key === 'Escape' && !editModal.classList.contains('hidden')) {
+                    closeEditModal();
+                }
+            });
+            
+            // Quick edit suggestions
+            document.querySelectorAll('.quick-edit-btn').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    editPromptInput.value = this.textContent;
+                    editPromptInput.focus();
+                });
+            });
+            
+            // Send edit request
+            editSendBtn.addEventListener('click', sendEditRequest);
+            editPromptInput.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter' && !e.shiftKey) {
+                    e.preventDefault();
+                    sendEditRequest();
+                }
+            });
+            
+            async function sendEditRequest() {
+                const prompt = editPromptInput.value.trim();
+                if (!prompt || !currentImageForEdit) return;
+                
+                // Add to history
+                addToEditHistory('user', prompt);
+                editPromptInput.value = '';
+                
+                // Show loading
+                editLoading.classList.remove('hidden');
+                editSendBtn.disabled = true;
+                
+                try {
+                    const response = await fetch('/chat_edit_image', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({
+                            prompt: prompt,
+                            session_id: currentEditSessionId,
+                            uploaded_images: [
+                                {
+                                    type: 'input',
+                                    dataUrl: currentImageForEdit
+                                }
+                            ]
+                        })
+                    });
+                    
+                    const data = await response.json();
+                    
+                    if (data.status === 'success' && data.generated_images && data.generated_images.length > 0) {
+                        currentImageForEdit = data.generated_images[0];
+                        editCurrentImage.src = currentImageForEdit;
+                        editCurrentImage.classList.remove('hidden');
+                        editCurrentPlaceholder.classList.add('hidden');
+                        addToEditHistory('ai', 'Görsel güncellendi ✓');
+                    } else {
+                        throw new Error(data.error || 'Düzenleme başarısız oldu');
+                    }
+                } catch (error) {
+                    addToEditHistory('ai', '❌ Hata: ' + error.message);
+                } finally {
+                    editLoading.classList.add('hidden');
+                    editSendBtn.disabled = false;
+                }
+            }
+            
+            function addToEditHistory(type, message) {
+                editHistory.classList.remove('hidden');
+                const item = document.createElement('div');
+                item.className = `edit-history-item ${type}`;
+                item.innerHTML = `
+                    <span class="text-xs text-gray-500">${type === 'user' ? 'Siz' : 'AI'}</span>
+                    <p class="mt-1">${message}</p>
+                `;
+                editHistory.appendChild(item);
+                editHistory.scrollTop = editHistory.scrollHeight;
+            }
+            
+            // Reset to original
+            editResetBtn.addEventListener('click', () => {
+                currentImageForEdit = originalImageForEdit;
+                editCurrentImage.src = '';
+                editCurrentImage.classList.add('hidden');
+                editCurrentPlaceholder.classList.remove('hidden');
+                editHistory.innerHTML = '';
+                editHistory.classList.add('hidden');
+                currentEditSessionId = 'vfit_' + Date.now();
+            });
+            
+            // Save and close
+            editSaveBtn.addEventListener('click', () => {
+                if (currentResultCard && currentImageForEdit !== originalImageForEdit) {
+                    // Update the result card image
+                    const resultImg = currentResultCard.querySelector('.result-image');
+                    if (resultImg) {
+                        resultImg.src = currentImageForEdit;
+                    }
+                    // Update download button data
+                    const downloadBtn = currentResultCard.querySelector('.download-btn');
+                    if (downloadBtn) {
+                        downloadBtn.dataset.image = currentImageForEdit;
+                    }
+                    // Update edit button data
+                    const editBtn = currentResultCard.querySelector('.edit-btn');
+                    if (editBtn) {
+                        editBtn.dataset.image = currentImageForEdit;
+                    }
+                }
+                closeEditModal();
+            });
+        });
+    </script>
+</body>
+</html>
+
+
