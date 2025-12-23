@@ -1,0 +1,1557 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Collection Builder - VFit Studio</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/remixicon@3.5.0/fonts/remixicon.css" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Outfit', sans-serif;
+            background: #0a0a0a;
+            min-height: 100vh;
+            color: #fff;
+            padding-top: 60px;
+            padding-bottom: 100px;
+        }
+        .card {
+            background: #141414;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+        }
+        .page-preview {
+            position: relative;
+            border: 2px solid rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            overflow: hidden;
+            transition: all 0.3s ease;
+        }
+        .page-preview:hover {
+            border-color: rgba(255, 255, 255, 0.3);
+        }
+        .page-preview.selected {
+            border-color: #fff;
+            box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.2);
+        }
+        .page-preview img {
+            width: 100%;
+            height: auto;
+            display: block;
+        }
+        .page-checkbox {
+            position: absolute;
+            top: 8px;
+            left: 8px;
+            width: 24px;
+            height: 24px;
+            background: rgba(0, 0, 0, 0.7);
+            border: 2px solid #fff;
+            border-radius: 4px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .page-checkbox input {
+            display: none;
+        }
+        .page-checkbox.checked {
+            background: #fff;
+        }
+        .page-checkbox.checked::after {
+            content: '✓';
+            color: #0a0a0a;
+            font-weight: bold;
+        }
+        .prompt-input {
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: #fff;
+            resize: none;
+        }
+        .prompt-input:focus {
+            outline: none;
+            border-color: rgba(255, 255, 255, 0.25);
+        }
+        .prompt-item {
+            display: grid;
+            grid-template-columns: 200px 1fr auto;
+            gap: 1rem;
+            align-items: start;
+        }
+        @media (max-width: 640px) {
+            .prompt-item {
+                grid-template-columns: 1fr;
+            }
+        }
+        .prompt-result {
+            margin-top: 1rem;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            overflow: hidden;
+            position: relative;
+        }
+        .prompt-result img {
+            width: 100%;
+            height: auto;
+            display: block;
+        }
+        .face-upload {
+            border: 1px dashed rgba(255, 255, 255, 0.2);
+            border-radius: 12px;
+            padding: 1rem;
+            background: rgba(255, 255, 255, 0.03);
+        }
+        .face-upload:hover {
+            border-color: rgba(255, 255, 255, 0.35);
+            background: rgba(255, 255, 255, 0.05);
+        }
+        .model-face {
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 10px;
+            padding: 0.5rem;
+            background: rgba(255, 255, 255, 0.02);
+        }
+        .model-face img {
+            width: 48px;
+            height: 48px;
+            object-fit: cover;
+            border-radius: 8px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        .model-face span {
+            font-size: 0.85rem;
+        }
+        .prompt-result-actions {
+            position: absolute;
+            top: 8px;
+            right: 8px;
+            display: flex;
+            gap: 0.5rem;
+        }
+        .prompt-checkbox-container {
+            position: absolute;
+            top: 8px;
+            left: 8px;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        .prompt-checkbox {
+            width: 24px;
+            height: 24px;
+            background: rgba(0, 0, 0, 0.7);
+            border: 2px solid #fff;
+            border-radius: 4px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
+        }
+        .prompt-checkbox.checked {
+            background: #fff;
+        }
+        .prompt-checkbox.checked::after {
+            content: '✓';
+            color: #0a0a0a;
+            font-weight: bold;
+            font-size: 14px;
+        }
+        .prompt-checkbox input {
+            display: none;
+        }
+        .btn-download-single {
+            background: rgba(0, 0, 0, 0.7);
+            color: #fff;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            padding: 0.5rem;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 36px;
+            height: 36px;
+        }
+        .btn-download-single:hover {
+            background: rgba(0, 0, 0, 0.9);
+            border-color: rgba(255, 255, 255, 0.4);
+            transform: translateY(-2px);
+        }
+        .btn-send {
+            background: #fff;
+            color: #0a0a0a;
+            padding: 0.75rem;
+            border-radius: 8px;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            white-space: nowrap;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 44px;
+            height: 44px;
+        }
+        .btn-send:hover {
+            background: rgba(255, 255, 255, 0.9);
+            transform: translateY(-2px);
+        }
+        .btn-send:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+        .prompt-preview {
+            width: 100%;
+            border-radius: 8px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            overflow: hidden;
+        }
+        .prompt-preview img {
+            width: 100%;
+            height: auto;
+            display: block;
+        }
+        .btn-primary {
+            background: #fff;
+            color: #0a0a0a;
+            transition: all 0.3s ease;
+        }
+        .btn-primary:hover {
+            background: rgba(255, 255, 255, 0.9);
+            transform: translateY(-2px);
+        }
+        .btn-primary:disabled {
+            opacity: 0.3;
+            cursor: not-allowed;
+            transform: none;
+        }
+        .btn-remove-prompt {
+            background: rgba(239, 68, 68, 0.2);
+            color: #ef4444;
+            border: 1px solid rgba(239, 68, 68, 0.3);
+            padding: 0.5rem;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 32px;
+            height: 32px;
+        }
+        .btn-remove-prompt:hover {
+            background: rgba(239, 68, 68, 0.3);
+            border-color: rgba(239, 68, 68, 0.5);
+            transform: translateY(-2px);
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <div class="fixed top-0 left-0 w-full bg-[#0a0a0a] border-b border-white/10 z-50 px-4 py-3">
+        <div class="container max-w-7xl mx-auto flex items-center justify-between">
+            <a href="/" class="flex items-center gap-2 text-white/70 hover:text-white">
+                <i class="ri-arrow-left-line"></i>
+                <span>Ana Sayfa</span>
+            </a>
+            <h1 class="text-xl font-semibold">Collection Builder</h1>
+            <div></div>
+        </div>
+    </div>
+
+    <div class="container max-w-7xl mx-auto px-4 py-8">
+        <!-- Document Type Selection -->
+        <div class="card rounded-xl p-6 mb-8">
+            <h3 class="text-lg font-semibold text-white mb-4">Döküman Türü</h3>
+            <div class="flex gap-4">
+                <button id="lookbookBtn" class="flex-1 px-6 py-3 rounded-lg border border-white/20 bg-white/5 hover:bg-white/10 transition-all">
+                    <div class="text-white font-medium">Lookbook</div>
+                    <div class="text-white/60 text-sm mt-1">MEHTAP ELAIDI FW '25</div>
+                </button>
+                <button id="linesheetBtn" class="flex-1 px-6 py-3 rounded-lg border border-white/10 hover:bg-white/5 transition-all">
+                    <div class="text-white/70 font-medium">LineSheet</div>
+                    <div class="text-white/40 text-sm mt-1">URBAN MUSE SS26</div>
+                </button>
+            </div>
+        </div>
+
+        <!-- Model Face Upload -->
+        <div class="card rounded-xl p-6 mb-8">
+            <div class="flex items-center justify-between mb-4">
+                <div>
+                    <h3 class="text-lg font-semibold text-white">Manken Yüzleri</h3>
+                    <p class="text-white/50 text-sm mt-1">Birden fazla yüz yükleyip promptlarda seçebilirsiniz</p>
+                </div>
+            </div>
+            <div class="face-upload mb-4">
+                <label for="modelFaceInput" class="flex items-center justify-between cursor-pointer text-white/70">
+                    <div class="flex items-center gap-3">
+                        <div class="w-11 h-11 rounded-full bg-white/10 flex items-center justify-center">
+                            <i class="ri-user-smile-line text-xl"></i>
+                        </div>
+                        <div>
+                            <div class="font-medium">Yüz ekle</div>
+                            <div class="text-white/50 text-sm">PNG/JPG, birden fazla seçilebilir</div>
+                        </div>
+                    </div>
+                    <span class="px-3 py-1 rounded-lg bg-white/10 text-sm">Dosya Seç</span>
+                </label>
+                <input id="modelFaceInput" type="file" accept="image/*" multiple class="hidden">
+            </div>
+            <div id="modelFacesList" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                <p class="text-white/50 text-sm col-span-full">Henüz yüz yüklenmedi.</p>
+            </div>
+        </div>
+
+        <!-- Layout Upload -->
+        <div class="card rounded-xl p-6 mb-8">
+            <div class="flex items-center justify-between mb-4">
+                <div>
+                    <h3 class="text-lg font-semibold text-white">Input Layout</h3>
+                    <p class="text-white/50 text-sm mt-1">Kendi layout görselinizi yükleyin (PDF/PNG)</p>
+                </div>
+            </div>
+            <div class="face-upload mb-4">
+                <label for="layoutInput" class="flex items-center justify-between cursor-pointer text-white/70">
+                    <div class="flex items-center gap-3">
+                        <div class="w-11 h-11 rounded-full bg-white/10 flex items-center justify-center">
+                            <i class="ri-file-image-line text-xl"></i>
+                        </div>
+                        <div>
+                            <div class="font-medium">Layout yükle</div>
+                            <div class="text-white/50 text-sm">PDF, PNG veya JPEG formatında</div>
+                        </div>
+                    </div>
+                    <span class="px-3 py-1 rounded-lg bg-white/10 text-sm">Dosya Seç</span>
+                </label>
+                <input id="layoutInput" type="file" accept=".pdf,.png,.jpg,.jpeg,image/png,image/jpeg,application/pdf" class="hidden">
+            </div>
+            <div id="layoutPreview" class="hidden">
+                <div class="flex items-center gap-3 p-3 bg-white/5 rounded-lg border border-white/10">
+                    <img id="layoutPreviewImg" src="" alt="Layout Preview" class="w-20 h-20 object-cover rounded-lg border border-white/10">
+                    <div class="flex-1">
+                        <div class="text-white font-medium" id="layoutFileName"></div>
+                        <div class="text-white/50 text-sm">Layout yüklendi</div>
+                    </div>
+                    <button id="removeLayoutBtn" class="px-3 py-1 rounded-lg bg-red-500/20 text-red-400 hover:bg-red-500/30 text-sm">
+                        <i class="ri-delete-bin-line mr-1"></i>Kaldır
+                    </button>
+                </div>
+            </div>
+            
+            <!-- Prompt Yazma Rehberi -->
+            <div class="mt-4 p-4 bg-gradient-to-r from-purple-500/10 to-pink-500/10 border border-purple-500/20 rounded-lg">
+                <div class="flex items-start gap-3">
+                    <div class="w-8 h-8 rounded-full bg-purple-500/20 flex items-center justify-center flex-shrink-0 mt-1">
+                        <i class="ri-lightbulb-line text-purple-400"></i>
+                    </div>
+                    <div class="flex-1">
+                        <h4 class="text-white font-medium mb-2">💡 Prompt Yazma İpuçları</h4>
+                        <div class="text-white/70 text-sm space-y-2">
+                            <div><span class="text-purple-400">📍 Lokasyon:</span> Manken nerede? (Paris caddesi, stüdyo, plaj...)</div>
+                            <div><span class="text-purple-400">📸 Kadraj:</span> Her grid için ayrı belirt (1.grid: tam vücut, 2.grid: yakın çekim baş-bel arası)</div>
+                            <div><span class="text-purple-400">💎 Aksesuarlar:</span> Takılar, çanta, ayakkabı detayları</div>
+                            <div><span class="text-purple-400">🌤️ Atmosfer:</span> Mevsim, hava, ışıklandırma (ilkbahar, güneşli, stüdyo ışığı...)</div>
+                            <div><span class="text-purple-400">👤 Pozlar:</span> Her grid için farklı poz belirtebilirsiniz</div>
+                            <div class="mt-3 pt-3 border-t border-white/10">
+                                <span class="text-green-400">✅ Otomatik Korunur:</span> Manken yüzü, layout yapısı, textler, grid sınırları
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Pages Grid -->
+        <div id="pagesSection" class="mb-8">
+            <div class="flex items-center justify-between mb-4">
+                <h3 class="text-lg font-semibold text-white">Sayfalar</h3>
+                <div class="flex gap-2">
+                    <button id="selectAllBtn" class="px-4 py-2 rounded-lg border border-white/20 text-white/70 hover:bg-white/5 text-sm">
+                        Tümünü Seç
+                    </button>
+                    <button id="deselectAllBtn" class="px-4 py-2 rounded-lg border border-white/20 text-white/70 hover:bg-white/5 text-sm">
+                        Seçimi Temizle
+                    </button>
+                </div>
+            </div>
+            
+            <!-- Loading State -->
+            <div id="pagesLoadingState" class="hidden text-center py-12">
+                <div class="flex flex-col items-center">
+                    <div class="w-16 h-16 border-4 border-white/20 border-t-white rounded-full animate-spin mb-4"></div>
+                    <p class="text-white/80 font-medium">Sayfalar yükleniyor...</p>
+                </div>
+            </div>
+            
+            <div id="pagesContainer" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
+                <!-- Pages will be loaded here -->
+            </div>
+            <div id="pagination" class="flex justify-center gap-2 mt-6">
+                <!-- Pagination will be generated here -->
+            </div>
+        </div>
+
+        <!-- Prompts Section -->
+        <div id="promptsSection" class="card rounded-xl p-6 mb-8 hidden">
+            <h3 class="text-lg font-semibold text-white mb-4">Sayfa Düzenlemeleri</h3>
+            <div id="promptsContainer">
+                <!-- Prompts will be generated here -->
+            </div>
+        </div>
+
+        <!-- Generate Button -->
+        <div class="text-center mb-8">
+            <button id="generateBtn" class="btn-primary px-10 py-4 rounded-xl font-semibold text-lg disabled:opacity-50" disabled>
+                <i class="ri-file-download-line mr-2"></i>
+                PDF Oluştur
+            </button>
+        </div>
+
+        <!-- Loading State -->
+        <div id="loadingState" class="hidden text-center py-12">
+            <div class="flex flex-col items-center">
+                <div class="w-16 h-16 border-4 border-white/20 border-t-white rounded-full animate-spin mb-4"></div>
+                <p class="text-white/80 font-medium">PDF oluşturuluyor...</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentDocType = 'lookbook';
+        let currentPages = [];
+        let totalPages = 0;
+        let currentPageGroup = 0;
+        const pagesPerGroup = 10;
+        let selectedPages = new Set();
+        let pagePrompts = {};
+        let modelFaces = [];
+        let pageModelSelections = {}; // Sayfa -> seçilen model yüzü id
+        let pageAspectRatios = {}; // Sayfa -> seçilen en-boy oranı
+        let editedImages = {}; // Sayfa numarası -> düzenlenmiş görsel (base64)
+        let selectedForPDF = new Set(); // PDF'e dahil edilecek sayfalar
+        let uploadedLayout = null; // Yüklenen layout görseli {name, data, type}
+
+        // Model face upload handlers
+        const modelFaceInput = document.getElementById('modelFaceInput');
+        modelFaceInput.addEventListener('change', async (e) => {
+            const files = Array.from(e.target.files || []);
+            if (files.length === 0) return;
+            await addModelFaces(files);
+            e.target.value = '';
+        });
+
+        async function addModelFaces(files) {
+            const fileReaders = files.map(file => fileToDataUrl(file).then(dataUrl => ({
+                id: `${Date.now()}-${Math.random().toString(16).slice(2)}`,
+                name: file.name,
+                data: dataUrl
+            })).catch(err => {
+                console.error('Yüz yükleme hatası:', err);
+                return null;
+            }));
+            const results = await Promise.all(fileReaders);
+            const validFaces = results.filter(Boolean);
+            if (validFaces.length === 0) return;
+            modelFaces = [...modelFaces, ...validFaces];
+            renderModelFaces();
+            updateModelSelectOptions();
+        }
+
+        function renderModelFaces() {
+            const list = document.getElementById('modelFacesList');
+            if (modelFaces.length === 0) {
+                list.innerHTML = '<p class="text-white/50 text-sm col-span-full">Henüz yüz yüklenmedi.</p>';
+                return;
+            }
+            list.innerHTML = modelFaces.map(face => `
+                <div class="model-face flex items-center gap-3">
+                    <img src="${face.data}" alt="${face.name}">
+                    <span class="text-white/80 truncate">${face.name}</span>
+                </div>
+            `).join('');
+        }
+
+        function updateModelSelectOptions() {
+            const optionsHtml = [
+                '<option value="">Model yüzü seç (opsiyonel)</option>',
+                ...modelFaces.map(face => `<option value="${face.id}">${face.name}</option>`)
+            ].join('');
+
+            const selects = document.querySelectorAll('.model-face-select');
+            console.log(`updateModelSelectOptions: ${selects.length} select bulundu, ${modelFaces.length} model yüzü var`);
+            
+            selects.forEach(select => {
+                const pageNum = parseInt(select.getAttribute('data-page'));
+                const previous = pageModelSelections[pageNum] || '';
+                select.innerHTML = optionsHtml;
+                if (previous) {
+                    select.value = previous;
+                }
+            });
+        }
+
+        function fileToDataUrl(file) {
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.onload = () => resolve(reader.result);
+                reader.onerror = reject;
+                reader.readAsDataURL(file);
+            });
+        }
+
+        // Layout upload handlers
+        const layoutInput = document.getElementById('layoutInput');
+        layoutInput.addEventListener('change', async (e) => {
+            const file = e.target.files?.[0];
+            if (!file) return;
+            
+            const isPDF = file.type === 'application/pdf' || file.name.toLowerCase().endsWith('.pdf');
+            const isPNG = file.type === 'image/png' || file.name.toLowerCase().endsWith('.png');
+            const isJPEG = file.type === 'image/jpeg' || file.name.toLowerCase().endsWith('.jpg') || file.name.toLowerCase().endsWith('.jpeg');
+            
+            if (!isPDF && !isPNG && !isJPEG) {
+                alert('Lütfen PDF, PNG veya JPEG formatında bir dosya seçin');
+                e.target.value = '';
+                return;
+            }
+            
+            try {
+                const dataUrl = await fileToDataUrl(file);
+                uploadedLayout = {
+                    name: file.name,
+                    data: dataUrl,
+                    type: isPDF ? 'pdf' : (isPNG ? 'png' : 'jpeg')
+                };
+                renderLayoutPreview();
+                togglePageSelectionState();
+            } catch (err) {
+                console.error('Layout yükleme hatası:', err);
+                alert('Layout yüklenirken hata oluştu');
+                e.target.value = '';
+            }
+        });
+
+        function renderLayoutPreview() {
+            const previewDiv = document.getElementById('layoutPreview');
+            const previewImg = document.getElementById('layoutPreviewImg');
+            const fileName = document.getElementById('layoutFileName');
+            
+            if (uploadedLayout) {
+                if (uploadedLayout.type === 'pdf') {
+                    // PDF için önizleme gösterilemez, sadece dosya adı göster
+                    previewImg.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iODAiIGhlaWdodD0iODAiIHZpZXdCb3g9IjAgMCA4MCA4MCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHJlY3Qgd2lkdGg9IjgwIiBoZWlnaHQ9IjgwIiByeD0iOCIgZmlsbD0icmdiYSgyNTUsIDI1NSwgMjU1LCAwLjEpIi8+CjxwYXRoIGQ9Ik0yNSAzMEg1NVY1MEgyNVYzMFoiIGZpbGw9InJnYmEoMjU1LCAyNTUsIDI1NSwgMC4zKSIvPgo8L3N2Zz4K';
+                    previewImg.alt = 'PDF';
+                } else {
+                    previewImg.src = uploadedLayout.data;
+                    previewImg.alt = uploadedLayout.name;
+                }
+                fileName.textContent = uploadedLayout.name;
+                previewDiv.classList.remove('hidden');
+            } else {
+                previewDiv.classList.add('hidden');
+            }
+        }
+
+        document.getElementById('removeLayoutBtn').addEventListener('click', () => {
+            uploadedLayout = null;
+            layoutInput.value = '';
+            renderLayoutPreview();
+            togglePageSelectionState();
+        });
+
+        // Sayfa seçimini layout durumuna göre aktif/inaktif yap
+        function togglePageSelectionState() {
+            const pagesSection = document.getElementById('pagesSection');
+            const selectAllBtn = document.getElementById('selectAllBtn');
+            const deselectAllBtn = document.getElementById('deselectAllBtn');
+            
+            if (uploadedLayout) {
+                // Layout yüklendiyse sayfa seçimini devre dışı bırak
+                pagesSection.style.opacity = '0.5';
+                pagesSection.style.pointerEvents = 'none';
+                selectAllBtn.disabled = true;
+                deselectAllBtn.disabled = true;
+                
+                // Bilgilendirme mesajı ekle
+                let infoMessage = document.getElementById('layoutInfoMessage');
+                if (!infoMessage) {
+                    infoMessage = document.createElement('div');
+                    infoMessage.id = 'layoutInfoMessage';
+                    infoMessage.className = 'bg-blue-500/20 border border-blue-500/30 rounded-lg p-4 mb-4 text-blue-300 text-sm';
+                    infoMessage.innerHTML = '<i class="ri-information-line mr-2"></i>Layout yüklendiğinde sayfa seçimi devre dışı kalır. Aşağıdaki "Layout Düzenleme" bölümünü kullanın.';
+                    pagesSection.insertBefore(infoMessage, pagesSection.firstChild.nextSibling);
+                }
+                
+                // Layout editing bölümünü göster
+                showLayoutEditingSection();
+            } else {
+                // Layout kaldırıldıysa sayfa seçimini aktif et
+                pagesSection.style.opacity = '1';
+                pagesSection.style.pointerEvents = 'auto';
+                selectAllBtn.disabled = false;
+                deselectAllBtn.disabled = false;
+                
+                // Bilgilendirme mesajını kaldır
+                const infoMessage = document.getElementById('layoutInfoMessage');
+                if (infoMessage) {
+                    infoMessage.remove();
+                }
+                
+                // Layout editing bölümünü gizle
+                hideLayoutEditingSection();
+            }
+        }
+
+        // Layout editing bölümünü göster/gizle
+        function showLayoutEditingSection() {
+            const promptsSection = document.getElementById('promptsSection');
+            promptsSection.classList.remove('hidden');
+            
+            const promptsContainer = document.getElementById('promptsContainer');
+            
+            // Eğer layout editing item yoksa oluştur
+            let layoutEditItem = document.getElementById('layoutEditItem');
+            if (!layoutEditItem) {
+                layoutEditItem = document.createElement('div');
+                layoutEditItem.id = 'layoutEditItem';
+                layoutEditItem.className = 'mb-6';
+                layoutEditItem.setAttribute('data-layout', 'true');
+                
+                const modelFaceOptions = [
+                    '<option value="">Model yüzü seç (opsiyonel)</option>',
+                    ...modelFaces.map(face => `<option value="${face.id}">${face.name}</option>`)
+                ].join('');
+                
+                layoutEditItem.innerHTML = `
+                    <div class="flex items-center justify-between mb-2">
+                        <label class="block text-white/70 text-sm">Layout Düzenleme</label>
+                    </div>
+                    <div class="prompt-item">
+                        <div class="prompt-preview">
+                            <img src="${uploadedLayout.data}" alt="Layout Preview">
+                        </div>
+                        <div class="flex flex-col gap-2 flex-1">
+                            <div class="flex items-center gap-2">
+                                <span class="text-white/60 text-xs w-28">Manken yüzü</span>
+                                <select class="model-face-select w-full bg-black/30 border border-white/10 text-white rounded-lg px-3 py-2 text-sm" data-layout="true">
+                                    ${modelFaceOptions}
+                                </select>
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <span class="text-white/60 text-xs w-28">Aspect ratio</span>
+                                <select class="aspect-ratio-select w-full bg-black/30 border border-white/10 text-white rounded-lg px-3 py-2 text-sm" data-layout="true">
+                                    <option value="">Seç (16:9 / 9:16)</option>
+                                    <option value="16:9">16:9 (yatay)</option>
+                                    <option value="9:16">9:16 (dikey)</option>
+                                </select>
+                            </div>
+                            <textarea 
+                                class="prompt-input w-full rounded-lg px-4 py-3" 
+                                rows="5"
+                                placeholder="📍 Lokasyon: Nerede? (Paris caddesi, stüdyo, plaj vb.)&#10;📸 Kadraj: Her grid için ayrı belirt (tam vücut, yakın çekim, baş-bel arası)&#10;💎 Aksesuarlar: Takılar, çanta, ayakkabı vb. detaylar&#10;🌤️ Atmosfer: Mevsim, hava durumu, ışıklandırma, arka plan&#10;👤 Pozlar: Her grid için farklı poz olabilir&#10;⚠️ ÖNEMLI: Layout grid yapısı, textler ve manken yüzü korunur"
+                                data-layout="true"
+                            ></textarea>
+                        </div>
+                        <button class="btn-send" data-layout="true">
+                            <i class="ri-send-plane-fill"></i>
+                        </button>
+                    </div>
+                `;
+                
+                // Event listeners ekle
+                const textarea = layoutEditItem.querySelector('textarea');
+                textarea.addEventListener('input', (e) => {
+                    window.layoutPrompt = e.target.value;
+                });
+                
+                const modelSelect = layoutEditItem.querySelector('.model-face-select');
+                modelSelect.addEventListener('change', (e) => {
+                    window.layoutModelSelection = e.target.value || null;
+                });
+                
+                const aspectSelect = layoutEditItem.querySelector('.aspect-ratio-select');
+                aspectSelect.addEventListener('change', (e) => {
+                    window.layoutAspectRatio = e.target.value || '16:9';
+                });
+                
+                const sendBtn = layoutEditItem.querySelector('.btn-send');
+                sendBtn.addEventListener('click', () => {
+                    sendLayoutRequest();
+                });
+                
+                promptsContainer.appendChild(layoutEditItem);
+            }
+        }
+
+        function hideLayoutEditingSection() {
+            const layoutEditItem = document.getElementById('layoutEditItem');
+            if (layoutEditItem) {
+                layoutEditItem.remove();
+            }
+            
+            // Eğer başka prompt item yoksa section'ı gizle
+            const promptsContainer = document.getElementById('promptsContainer');
+            if (promptsContainer.children.length === 0) {
+                const promptsSection = document.getElementById('promptsSection');
+                promptsSection.classList.add('hidden');
+            }
+        }
+
+        // Document type selection
+        document.getElementById('lookbookBtn').addEventListener('click', () => {
+            currentDocType = 'lookbook';
+            updateDocTypeButtons();
+            loadPages();
+        });
+
+        document.getElementById('linesheetBtn').addEventListener('click', () => {
+            currentDocType = 'linesheet';
+            updateDocTypeButtons();
+            loadPages();
+        });
+
+        function updateDocTypeButtons() {
+            const lookbookBtn = document.getElementById('lookbookBtn');
+            const linesheetBtn = document.getElementById('linesheetBtn');
+            
+            if (currentDocType === 'lookbook') {
+                lookbookBtn.classList.add('bg-white/5', 'border-white/20');
+                lookbookBtn.classList.remove('border-white/10');
+                linesheetBtn.classList.remove('bg-white/5', 'border-white/20');
+                linesheetBtn.classList.add('border-white/10');
+            } else {
+                linesheetBtn.classList.add('bg-white/5', 'border-white/20');
+                linesheetBtn.classList.remove('border-white/10');
+                lookbookBtn.classList.remove('bg-white/5', 'border-white/20');
+                lookbookBtn.classList.add('border-white/10');
+            }
+        }
+
+        // Load pages
+        async function loadPages() {
+            const pagesLoadingState = document.getElementById('pagesLoadingState');
+            const pagesContainer = document.getElementById('pagesContainer');
+            const pagination = document.getElementById('pagination');
+            
+            // Loading state'i göster
+            pagesLoadingState.classList.remove('hidden');
+            pagesContainer.innerHTML = '';
+            pagination.innerHTML = '';
+            
+            try {
+                const response = await fetch(`/api/collection-builder/pages?type=${currentDocType}`);
+                const data = await response.json();
+                
+                if (data.success) {
+                    currentPages = data.pages;
+                    totalPages = data.total_pages;
+                    currentPageGroup = 0;
+                    selectedPages.clear();
+                    pagePrompts = {};
+                    editedImages = {};
+                    selectedForPDF.clear();
+                    
+                    // Loading state'i gizle
+                    pagesLoadingState.classList.add('hidden');
+                    
+                    displayPageGroup(0);
+                    updateGenerateButton();
+                } else {
+                    pagesLoadingState.classList.add('hidden');
+                    alert('Sayfalar yüklenirken hata oluştu: ' + (data.error || 'Bilinmeyen hata'));
+                }
+            } catch (error) {
+                console.error('Error loading pages:', error);
+                pagesLoadingState.classList.add('hidden');
+                alert('Sayfalar yüklenirken hata oluştu');
+            }
+        }
+
+        function displayPageGroup(groupIndex) {
+            const container = document.getElementById('pagesContainer');
+            container.innerHTML = '';
+            
+            const start = groupIndex * pagesPerGroup;
+            const end = Math.min(start + pagesPerGroup, currentPages.length);
+            
+            for (let i = start; i < end; i++) {
+                const page = currentPages[i];
+                const pageNum = i + 1;
+                const isSelected = selectedPages.has(pageNum);
+                
+                const pageDiv = document.createElement('div');
+                pageDiv.className = `page-preview ${isSelected ? 'selected' : ''}`;
+                pageDiv.innerHTML = `
+                    <div class="page-checkbox ${isSelected ? 'checked' : ''}" data-page="${pageNum}">
+                        <input type="checkbox" ${isSelected ? 'checked' : ''}>
+                    </div>
+                    <img src="${page.preview}" alt="Sayfa ${pageNum}">
+                    <div class="absolute bottom-0 left-0 right-0 bg-black/70 text-white text-xs text-center py-1">
+                        Sayfa ${pageNum}
+                    </div>
+                `;
+                
+                pageDiv.querySelector('.page-checkbox').addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    togglePageSelection(pageNum);
+                });
+                
+                container.appendChild(pageDiv);
+            }
+            
+            // Pagination
+            updatePagination();
+        }
+
+        function updatePagination() {
+            const pagination = document.getElementById('pagination');
+            pagination.innerHTML = '';
+            
+            const totalGroups = Math.ceil(currentPages.length / pagesPerGroup);
+            
+            for (let i = 0; i < totalGroups; i++) {
+                const btn = document.createElement('button');
+                btn.className = `px-4 py-2 rounded-lg border ${
+                    i === currentPageGroup 
+                        ? 'bg-white text-black border-white' 
+                        : 'border-white/20 text-white/70 hover:bg-white/5'
+                }`;
+                btn.textContent = i + 1;
+                btn.addEventListener('click', () => {
+                    currentPageGroup = i;
+                    displayPageGroup(i);
+                });
+                pagination.appendChild(btn);
+            }
+        }
+
+        function togglePageSelection(pageNum) {
+            // Layout yüklüyse sayfa seçimine izin verme
+            if (uploadedLayout) {
+                return;
+            }
+            
+            if (selectedPages.has(pageNum)) {
+                selectedPages.delete(pageNum);
+                delete pagePrompts[pageNum];
+                delete pageModelSelections[pageNum];
+                delete pageAspectRatios[pageNum];
+                delete editedImages[pageNum];
+                selectedForPDF.delete(pageNum);
+            } else {
+                selectedPages.add(pageNum);
+                if (!pagePrompts[pageNum]) {
+                    pagePrompts[pageNum] = '';
+                }
+            }
+            
+            displayPageGroup(currentPageGroup);
+            updatePromptsSection();
+            updateGenerateButton();
+        }
+
+        document.getElementById('selectAllBtn').addEventListener('click', () => {
+            if (uploadedLayout) return; // Layout varsa işlem yapma
+            
+            for (let i = 0; i < currentPages.length; i++) {
+                selectedPages.add(i + 1);
+                if (!pagePrompts[i + 1]) {
+                    pagePrompts[i + 1] = '';
+                }
+            }
+            displayPageGroup(currentPageGroup);
+            updatePromptsSection();
+            updateGenerateButton();
+        });
+
+        document.getElementById('deselectAllBtn').addEventListener('click', () => {
+            if (uploadedLayout) return; // Layout varsa işlem yapma
+            
+            selectedPages.clear();
+            pagePrompts = {};
+            pageModelSelections = {};
+            pageAspectRatios = {};
+            editedImages = {};
+            selectedForPDF.clear();
+            displayPageGroup(currentPageGroup);
+            updatePromptsSection();
+            updateGenerateButton();
+        });
+
+        function updatePromptsSection() {
+            const promptsSection = document.getElementById('promptsSection');
+            const promptsContainer = document.getElementById('promptsContainer');
+            
+            if (selectedPages.size === 0) {
+                promptsSection.classList.add('hidden');
+                promptsContainer.innerHTML = '';
+                return;
+            }
+            
+            promptsSection.classList.remove('hidden');
+            
+            // Mevcut prompt-item'ları kontrol et ve seçilmemiş olanları sil
+            const existingItems = promptsContainer.querySelectorAll('[data-page]');
+            existingItems.forEach(item => {
+                const pageNum = parseInt(item.getAttribute('data-page'));
+                if (!selectedPages.has(pageNum)) {
+                    item.remove();
+                }
+            });
+            
+            // Yeni seçilen sayfalar için prompt-item oluştur
+            const sortedPages = Array.from(selectedPages).sort((a, b) => a - b);
+            
+            sortedPages.forEach(pageNum => {
+                // Eğer bu sayfa için zaten prompt-item varsa, atla
+                const existingItem = promptsContainer.querySelector(`[data-page="${pageNum}"]`);
+                if (existingItem) {
+                    return; // Mevcut item'ı koru
+                }
+                
+                // Yeni prompt-item oluştur
+                const pageIndex = pageNum - 1;
+                const page = currentPages[pageIndex];
+                const pagePreview = page ? page.preview : '';
+                const hasEditedImage = editedImages[pageNum];
+                
+                // Model yüzü seçeneklerini hazırla
+                const modelFaceOptions = [
+                    '<option value="">Model yüzü seç (opsiyonel)</option>',
+                    ...modelFaces.map(face => `<option value="${face.id}">${face.name}</option>`)
+                ].join('');
+                
+                const selectedModelId = pageModelSelections[pageNum] || '';
+                
+                const promptDiv = document.createElement('div');
+                promptDiv.className = 'mb-6';
+                promptDiv.setAttribute('data-page', pageNum);
+                promptDiv.innerHTML = `
+                    <div class="flex items-center justify-between mb-2">
+                        <label class="block text-white/70 text-sm">Sayfa ${pageNum} - Prompt</label>
+                        <button class="btn-remove-prompt" data-page="${pageNum}" title="Kaldır">
+                            <i class="ri-delete-bin-line"></i>
+                        </button>
+                    </div>
+                    <div class="prompt-item">
+                        <div class="prompt-preview">
+                            <img src="${hasEditedImage || pagePreview}" alt="Sayfa ${pageNum} Preview">
+                        </div>
+                        <div class="flex flex-col gap-2 flex-1">
+                            <div class="flex items-center gap-2">
+                                <span class="text-white/60 text-xs w-28">Manken yüzü</span>
+                                <select class="model-face-select w-full bg-black/30 border border-white/10 text-white rounded-lg px-3 py-2 text-sm" data-page="${pageNum}">
+                                    ${modelFaceOptions}
+                                </select>
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <span class="text-white/60 text-xs w-28">Aspect ratio</span>
+                                <select class="aspect-ratio-select w-full bg-black/30 border border-white/10 text-white rounded-lg px-3 py-2 text-sm" data-page="${pageNum}">
+                                    <option value="">Seç (16:9 / 9:16)</option>
+                                    <option value="16:9">16:9 (yatay)</option>
+                                    <option value="9:16">9:16 (dikey)</option>
+                                </select>
+                            </div>
+                            <textarea 
+                                class="prompt-input w-full rounded-lg px-4 py-3" 
+                                rows="4"
+                                placeholder="📍 Lokasyon: Paris'te ünlü bir caddede yürüyor&#10;📸 Kadraj: 1.grid tam vücut, 2.grid yakın çekim (baş-bel arası)&#10;💎 Aksesuarlar: Tiffany kolye, küpe, küçük çanta, topuklu ayakkabı&#10;🌤️ Atmosfer: İlkbahar, açık güneşli hava, arka planda insan yok&#10;⚠️ NOT: Layout ve textler korunur, manken grid içinde kalır"
+                                data-page="${pageNum}"
+                            >${pagePrompts[pageNum] || ''}</textarea>
+                            ${hasEditedImage ? `
+                                <div class="prompt-result">
+                                    <div class="prompt-checkbox-container">
+                                        <div class="prompt-checkbox ${selectedForPDF.has(pageNum) ? 'checked' : ''}" data-page="${pageNum}">
+                                            <input type="checkbox" ${selectedForPDF.has(pageNum) ? 'checked' : ''}>
+                                        </div>
+                                        <span class="text-white text-xs">PDF'e dahil</span>
+                                    </div>
+                                    <div class="prompt-result-actions">
+                                        <button class="btn-download-single" data-page="${pageNum}" title="İndir">
+                                            <i class="ri-download-line"></i>
+                                        </button>
+                                    </div>
+                                    <img src="${hasEditedImage}" alt="Düzenlenmiş Sayfa ${pageNum}">
+                                </div>
+                            ` : ''}
+                        </div>
+                        <button class="btn-send" data-page="${pageNum}">
+                            <i class="ri-send-plane-fill"></i>
+                        </button>
+                    </div>
+                `;
+                
+                const textarea = promptDiv.querySelector('textarea');
+                textarea.addEventListener('input', (e) => {
+                    pagePrompts[pageNum] = e.target.value;
+                });
+                
+                const modelSelect = promptDiv.querySelector('.model-face-select');
+                if (modelSelect) {
+                    // Eğer daha önce bir seçim yapılmışsa, onu set et
+                    if (selectedModelId) {
+                        modelSelect.value = selectedModelId;
+                    }
+                    
+                    modelSelect.addEventListener('change', (e) => {
+                        const value = e.target.value;
+                        if (value) {
+                            pageModelSelections[pageNum] = value;
+                        } else {
+                            delete pageModelSelections[pageNum];
+                        }
+                    });
+                }
+
+                const aspectSelect = promptDiv.querySelector('.aspect-ratio-select');
+                if (aspectSelect) {
+                    const savedAspect = pageAspectRatios[pageNum] || '';
+                    if (savedAspect) {
+                        aspectSelect.value = savedAspect;
+                    }
+                    aspectSelect.addEventListener('change', (e) => {
+                        const value = e.target.value;
+                        if (value) {
+                            pageAspectRatios[pageNum] = value;
+                        } else {
+                            delete pageAspectRatios[pageNum];
+                        }
+                    });
+                }
+
+                const sendBtn = promptDiv.querySelector('.btn-send');
+                sendBtn.addEventListener('click', () => {
+                    sendPageRequest(pageNum);
+                });
+                
+                // İndir butonu event listener (eğer varsa)
+                const downloadBtn = promptDiv.querySelector('.btn-download-single');
+                if (downloadBtn) {
+                    downloadBtn.addEventListener('click', () => {
+                        downloadSingleImage(pageNum);
+                    });
+                }
+                
+                // Checkbox event listener (eğer varsa - mevcut görsel için)
+                const checkbox = promptDiv.querySelector('.prompt-checkbox');
+                if (checkbox) {
+                    checkbox.addEventListener('click', () => {
+                        togglePDFSelection(pageNum);
+                    });
+                }
+
+                // Remove button event listener
+                const removeBtn = promptDiv.querySelector('.btn-remove-prompt');
+                if (removeBtn) {
+                    removeBtn.addEventListener('click', () => {
+                        removePromptItem(pageNum);
+                    });
+                }
+
+                // Model yüzü seçeneklerini güncelle
+                updateModelSelectOptions();
+                
+                promptsContainer.appendChild(promptDiv);
+            });
+        }
+
+        function togglePDFSelection(pageNum) {
+            if (selectedForPDF.has(pageNum)) {
+                selectedForPDF.delete(pageNum);
+            } else {
+                selectedForPDF.add(pageNum);
+            }
+            
+            // Checkbox görselini güncelle
+            const checkbox = document.querySelector(`.prompt-checkbox[data-page="${pageNum}"]`);
+            if (checkbox) {
+                if (selectedForPDF.has(pageNum)) {
+                    checkbox.classList.add('checked');
+                    checkbox.querySelector('input').checked = true;
+                } else {
+                    checkbox.classList.remove('checked');
+                    checkbox.querySelector('input').checked = false;
+                }
+            }
+            
+            updateGenerateButton();
+        }
+
+        function removePromptItem(pageNum) {
+            // Prompt-item'ı DOM'dan kaldır
+            const promptItem = document.querySelector(`[data-page="${pageNum}"]`);
+            if (promptItem) {
+                promptItem.remove();
+            }
+            
+            // İlgili verileri temizle
+            selectedPages.delete(pageNum);
+            delete pagePrompts[pageNum];
+            delete pageModelSelections[pageNum];
+            delete pageAspectRatios[pageNum];
+            delete editedImages[pageNum];
+            selectedForPDF.delete(pageNum);
+            
+            // Sayfa seçimini güncelle
+            displayPageGroup(currentPageGroup);
+            
+            // Prompts section'ı güncelle
+            updatePromptsSection();
+            
+            // Generate button'ı güncelle
+            updateGenerateButton();
+        }
+
+        function updateGenerateButton() {
+            const generateBtn = document.getElementById('generateBtn');
+            // En az bir sayfa PDF için seçili olmalı VE düzenlenmiş görseli olmalı
+            let hasValidSelection = false;
+            if (selectedForPDF.size > 0) {
+                // Seçili sayfaların hepsinin düzenlenmiş görseli olup olmadığını kontrol et
+                const sortedPages = Array.from(selectedForPDF);
+                hasValidSelection = sortedPages.some(pageNum => {
+                    return editedImages[pageNum] !== undefined && editedImages[pageNum] !== null;
+                });
+            }
+            generateBtn.disabled = !hasValidSelection;
+        }
+
+        async function sendPageRequest(pageNum) {
+            const sendBtn = document.querySelector(`.btn-send[data-page="${pageNum}"]`);
+            if (!sendBtn) {
+                console.error('Send button bulunamadı:', pageNum);
+                alert('Gönder butonu bulunamadı');
+                return;
+            }
+            
+            // Butonun parent'larından prompt div'i bul
+            let promptDiv = sendBtn.closest('.mb-6[data-page]');
+            if (!promptDiv) {
+                // Alternatif: direkt selector ile dene
+                promptDiv = document.querySelector(`.mb-6[data-page="${pageNum}"]`);
+            }
+            
+            if (!promptDiv) {
+                console.error('Prompt div bulunamadı:', pageNum);
+                alert('Sayfa yapısı bulunamadı');
+                return;
+            }
+            
+            const textarea = promptDiv.querySelector(`textarea[data-page="${pageNum}"]`);
+            if (!textarea) {
+                console.error('Textarea bulunamadı:', pageNum);
+                alert('Textarea bulunamadı');
+                return;
+            }
+            
+            const prompt = textarea.value.trim();
+            const selectedModelId = pageModelSelections[pageNum] || null;
+            const selectedModel = selectedModelId ? modelFaces.find(face => face.id === selectedModelId) : null;
+            const aspectRatio = pageAspectRatios[pageNum] || '16:9';
+            
+            sendBtn.disabled = true;
+            sendBtn.innerHTML = '<i class="ri-loader-4-line animate-spin"></i>';
+            
+            // Layout görselini hazırla
+            const layoutPayload = uploadedLayout ? {
+                name: uploadedLayout.name,
+                data: uploadedLayout.data,
+                type: uploadedLayout.type
+            } : null;
+
+            try {
+                const response = await fetch('/api/collection-builder/generate-page', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        doc_type: currentDocType,
+                        page_num: pageNum,
+                        prompt: prompt,
+                        model_face: selectedModel ? {
+                            id: selectedModel.id,
+                            name: selectedModel.name,
+                            data: selectedModel.data
+                        } : null,
+                        model_faces: selectedModel ? [{
+                            id: selectedModel.id,
+                            name: selectedModel.name,
+                            data: selectedModel.data
+                        }] : [],
+                        aspect_ratio: aspectRatio,
+                        layout: layoutPayload
+                    })
+                });
+                
+                // Response status kontrolü
+                if (!response.ok) {
+                    const errorText = await response.text();
+                    console.error('Response error:', response.status, errorText);
+                    alert('Hata: ' + (errorText || `HTTP ${response.status}`));
+                    return;
+                }
+                
+                const data = await response.json();
+                console.log('Response data:', data);
+                
+                if (data.success && data.image) {
+                    // Düzenlenmiş görseli kaydet
+                    editedImages[pageNum] = data.image;
+                    
+                    // Prompt item'i güncelle (promptDiv içindeki .prompt-item)
+                    const promptItem = promptDiv.querySelector('.prompt-item');
+                    if (!promptItem) {
+                        console.error('Prompt item bulunamadı, promptDiv:', promptDiv);
+                        console.error('PromptDiv innerHTML:', promptDiv.innerHTML);
+                        alert('Sayfa yapısı bulunamadı');
+                        return;
+                    }
+                    
+                    // Preview görselini güncelle
+                    const promptPreview = promptItem.querySelector('.prompt-preview img');
+                    if (promptPreview) {
+                        promptPreview.src = data.image;
+                        console.log('Preview görseli güncellendi');
+                    } else {
+                        console.warn('Preview img bulunamadı');
+                    }
+                    
+                    // Result alanını ekle veya güncelle
+                    let resultDiv = promptDiv.querySelector('.prompt-result');
+                    const textareaContainer = promptItem.querySelector('.flex.flex-col');
+                    
+                    if (!resultDiv && textareaContainer) {
+                        // Yeni result div oluştur
+                        resultDiv = document.createElement('div');
+                        resultDiv.className = 'prompt-result';
+                        resultDiv.innerHTML = `
+                            <div class="prompt-checkbox-container">
+                                <div class="prompt-checkbox ${selectedForPDF.has(pageNum) ? 'checked' : ''}" data-page="${pageNum}">
+                                    <input type="checkbox" ${selectedForPDF.has(pageNum) ? 'checked' : ''}>
+                                </div>
+                                <span class="text-white text-xs">PDF'e dahil</span>
+                            </div>
+                            <div class="prompt-result-actions">
+                                <button class="btn-download-single" data-page="${pageNum}" title="İndir">
+                                    <i class="ri-download-line"></i>
+                                </button>
+                            </div>
+                            <img src="${data.image}" alt="Düzenlenmiş Sayfa ${pageNum}">
+                        `;
+                        
+                        // Checkbox event listener ekle
+                        const checkbox = resultDiv.querySelector('.prompt-checkbox');
+                        if (checkbox) {
+                            checkbox.addEventListener('click', () => {
+                                togglePDFSelection(pageNum);
+                            });
+                        }
+                        textareaContainer.appendChild(resultDiv);
+                        
+                        // İndir butonu event listener ekle
+                        const downloadBtn = resultDiv.querySelector('.btn-download-single');
+                        if (downloadBtn) {
+                            downloadBtn.addEventListener('click', () => {
+                                downloadSingleImage(pageNum);
+                            });
+                        }
+                        console.log('Yeni result div eklendi');
+                    } else if (resultDiv) {
+                        // Mevcut result div'i güncelle
+                        const resultImg = resultDiv.querySelector('img');
+                        if (resultImg) {
+                            resultImg.src = data.image;
+                            console.log('Mevcut result görseli güncellendi');
+                        } else {
+                            resultDiv.innerHTML = `
+                                <div class="prompt-checkbox-container">
+                                    <div class="prompt-checkbox ${selectedForPDF.has(pageNum) ? 'checked' : ''}" data-page="${pageNum}">
+                                        <input type="checkbox" ${selectedForPDF.has(pageNum) ? 'checked' : ''}>
+                                    </div>
+                                    <span class="text-white text-xs">PDF'e dahil</span>
+                                </div>
+                                <div class="prompt-result-actions">
+                                    <button class="btn-download-single" data-page="${pageNum}" title="İndir">
+                                        <i class="ri-download-line"></i>
+                                    </button>
+                                </div>
+                                <img src="${data.image}" alt="Düzenlenmiş Sayfa ${pageNum}">
+                            `;
+                            
+                            // Checkbox event listener ekle
+                            const checkbox = resultDiv.querySelector('.prompt-checkbox');
+                            if (checkbox) {
+                                checkbox.addEventListener('click', () => {
+                                    togglePDFSelection(pageNum);
+                                });
+                            }
+                            // İndir butonu event listener ekle
+                            const downloadBtn = resultDiv.querySelector('.btn-download-single');
+                            if (downloadBtn) {
+                                downloadBtn.addEventListener('click', () => {
+                                    downloadSingleImage(pageNum);
+                                });
+                            }
+                            console.log('Result div içeriği güncellendi');
+                        }
+                    } else {
+                        console.error('Result div eklenemedi - textareaContainer bulunamadı');
+                    }
+                } else {
+                    console.error('Response başarısız veya görsel yok:', data);
+                    alert('Hata: ' + (data.error || 'Sayfa düzenlenemedi veya görsel alınamadı'));
+                }
+            } catch (error) {
+                console.error('Error generating page:', error);
+                console.error('Error details:', error.message, error.stack);
+                alert('Sayfa düzenlenirken hata oluştu: ' + error.message);
+            } finally {
+                sendBtn.disabled = false;
+                sendBtn.innerHTML = '<i class="ri-send-plane-fill"></i>';
+                updateGenerateButton();
+            }
+        }
+
+        // Tekil görsel indirme fonksiyonu
+        function downloadSingleImage(pageNum) {
+            const imageData = editedImages[pageNum];
+            if (!imageData) {
+                alert('İndirilecek görsel bulunamadı');
+                return;
+            }
+            
+            const link = document.createElement('a');
+            link.href = imageData;
+            link.download = `sayfa_${pageNum}_${currentDocType}_${Date.now()}.png`;
+            link.click();
+        }
+
+        // Layout için istek gönderme
+        async function sendLayoutRequest() {
+            if (!uploadedLayout) {
+                alert('Layout yüklenmemiş');
+                return;
+            }
+            
+            const sendBtn = document.querySelector('.btn-send[data-layout="true"]');
+            const textarea = document.querySelector('textarea[data-layout="true"]');
+            
+            if (!sendBtn || !textarea) {
+                console.error('Layout send button veya textarea bulunamadı');
+                return;
+            }
+            
+            const prompt = textarea.value.trim();
+            const selectedModelId = window.layoutModelSelection || null;
+            const selectedModel = selectedModelId ? modelFaces.find(face => face.id === selectedModelId) : null;
+            const aspectRatio = window.layoutAspectRatio || '16:9';
+            
+            sendBtn.disabled = true;
+            sendBtn.innerHTML = '<i class="ri-loader-4-line animate-spin"></i>';
+            
+            try {
+                const response = await fetch('/api/collection-builder/generate-page', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        doc_type: currentDocType,
+                        page_num: 0, // Layout için sayfa numarası yok
+                        prompt: prompt,
+                        model_face: selectedModel ? {
+                            id: selectedModel.id,
+                            name: selectedModel.name,
+                            data: selectedModel.data
+                        } : null,
+                        model_faces: selectedModel ? [{
+                            id: selectedModel.id,
+                            name: selectedModel.name,
+                            data: selectedModel.data
+                        }] : [],
+                        aspect_ratio: aspectRatio,
+                        layout: {
+                            name: uploadedLayout.name,
+                            data: uploadedLayout.data,
+                            type: uploadedLayout.type
+                        },
+                        use_layout_only: true // Layout modunda çalıştığını belirt
+                    })
+                });
+                
+                if (!response.ok) {
+                    const errorText = await response.text();
+                    console.error('Response error:', response.status, errorText);
+                    alert('Hata: ' + (errorText || `HTTP ${response.status}`));
+                    return;
+                }
+                
+                const data = await response.json();
+                console.log('Layout response data:', data);
+                
+                if (data.success && data.image) {
+                    // Düzenlenmiş görseli kaydet (layout için özel key)
+                    window.layoutEditedImage = data.image;
+                    
+                    // Result alanını göster
+                    const promptItem = document.querySelector('#layoutEditItem .prompt-item');
+                    const textareaContainer = promptItem.querySelector('.flex.flex-col');
+                    
+                    let resultDiv = document.querySelector('#layoutEditItem .prompt-result');
+                    
+                    if (!resultDiv && textareaContainer) {
+                        resultDiv = document.createElement('div');
+                        resultDiv.className = 'prompt-result';
+                        resultDiv.innerHTML = `
+                            <div class="prompt-result-actions">
+                                <button class="btn-download-single" data-layout="true" title="İndir">
+                                    <i class="ri-download-line"></i>
+                                </button>
+                            </div>
+                            <img src="${data.image}" alt="Düzenlenmiş Layout">
+                        `;
+                        
+                        const downloadBtn = resultDiv.querySelector('.btn-download-single');
+                        downloadBtn.addEventListener('click', () => {
+                            const link = document.createElement('a');
+                            link.href = window.layoutEditedImage;
+                            link.download = `layout_edited_${Date.now()}.png`;
+                            link.click();
+                        });
+                        
+                        textareaContainer.appendChild(resultDiv);
+                    } else if (resultDiv) {
+                        const resultImg = resultDiv.querySelector('img');
+                        if (resultImg) {
+                            resultImg.src = data.image;
+                        }
+                    }
+                    
+                    // Preview görselini güncelle
+                    const previewImg = document.querySelector('#layoutEditItem .prompt-preview img');
+                    if (previewImg) {
+                        previewImg.src = data.image;
+                    }
+                } else {
+                    console.error('Response başarısız veya görsel yok:', data);
+                    alert('Hata: ' + (data.error || 'Layout düzenlenemedi'));
+                }
+            } catch (error) {
+                console.error('Error generating layout:', error);
+                alert('Layout düzenlenirken hata oluştu: ' + error.message);
+            } finally {
+                sendBtn.disabled = false;
+                sendBtn.innerHTML = '<i class="ri-send-plane-fill"></i>';
+            }
+        }
+
+        // Generate PDF
+        document.getElementById('generateBtn').addEventListener('click', async () => {
+            if (selectedForPDF.size === 0) {
+                alert('Lütfen PDF\'e dahil edilecek en az bir sayfa seçin');
+                return;
+            }
+            
+            const loadingState = document.getElementById('loadingState');
+            const generateBtn = document.getElementById('generateBtn');
+            
+            loadingState.classList.remove('hidden');
+            generateBtn.disabled = true;
+            
+            try {
+                // PDF için seçili sayfaları sıralı olarak al ve düzenlenmiş görselleri topla
+                const sortedPages = Array.from(selectedForPDF).sort((a, b) => a - b);
+                console.log(`📄 PDF oluşturuluyor: ${sortedPages.length} sayfa seçildi`);
+                
+                const editedImagesArray = sortedPages.map(pageNum => {
+                    if (!editedImages[pageNum]) {
+                        console.warn(`⚠️ Sayfa ${pageNum} için düzenlenmiş görsel bulunamadı`);
+                        return null;
+                    }
+                    // Base64'ten data:image kısmını temizle
+                    let imgData = editedImages[pageNum];
+                    if (imgData.startsWith('data:image')) {
+                        imgData = imgData.split(',')[1];
+                    }
+                    return imgData;
+                }).filter(img => img !== null); // null değerleri filtrele
+                
+                if (editedImagesArray.length === 0) {
+                    throw new Error('PDF\'e dahil edilecek düzenlenmiş görsel bulunamadı. Lütfen önce sayfaları düzenleyin.');
+                }
+                
+                console.log(`📤 ${editedImagesArray.length} görsel sunucuya gönderiliyor...`);
+                
+                const response = await fetch('/api/collection-builder/generate', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        edited_images: editedImagesArray
+                    })
+                });
+                
+                // Response status kontrolü
+                if (!response.ok) {
+                    const errorText = await response.text();
+                    console.error('❌ Response error:', response.status, errorText);
+                    let errorMessage = `HTTP ${response.status}`;
+                    try {
+                        const errorData = JSON.parse(errorText);
+                        errorMessage = errorData.error || errorMessage;
+                    } catch (e) {
+                        errorMessage = errorText || errorMessage;
+                    }
+                    throw new Error(errorMessage);
+                }
+                
+                // JSON parse et
+                let data;
+                try {
+                    const responseText = await response.text();
+                    console.log('📥 Response alındı, uzunluk:', responseText.length);
+                    data = JSON.parse(responseText);
+                } catch (parseError) {
+                    console.error('❌ JSON parse hatası:', parseError);
+                    throw new Error('Sunucudan geçersiz yanıt alındı');
+                }
+                
+                if (data.success && data.pdf_data) {
+                    console.log('✅ PDF başarıyla oluşturuldu, indiriliyor...');
+                    // Download PDF
+                    const link = document.createElement('a');
+                    link.href = data.pdf_data;
+                    link.download = `collection_${currentDocType}_${Date.now()}.pdf`;
+                    document.body.appendChild(link);
+                    link.click();
+                    document.body.removeChild(link);
+                    console.log('✅ PDF indirme başlatıldı');
+                } else {
+                    throw new Error(data.error || 'PDF oluşturulamadı');
+                }
+            } catch (error) {
+                console.error('❌ Error generating PDF:', error);
+                console.error('Error details:', error.message, error.stack);
+                alert('PDF oluşturulurken hata oluştu: ' + (error.message || error.toString()));
+            } finally {
+                loadingState.classList.add('hidden');
+                generateBtn.disabled = false;
+            }
+        });
+
+        // Initialize
+        updateDocTypeButtons();
+        loadPages();
+    </script>
+</body>
+</html>
+
+
+
